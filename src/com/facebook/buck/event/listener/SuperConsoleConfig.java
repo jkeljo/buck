@@ -28,11 +28,8 @@ public class SuperConsoleConfig {
 
   private final BuckConfig delegate;
 
-  private final boolean useTheForce;
-
-  public SuperConsoleConfig(BuckConfig delegate, boolean useTheForce) {
+  public SuperConsoleConfig(BuckConfig delegate) {
     this.delegate = delegate;
-    this.useTheForce = useTheForce;
   }
 
   public int getThreadLineLimit() {
@@ -51,10 +48,6 @@ public class SuperConsoleConfig {
 
   public boolean shouldAlwaysSortThreadsByTime() {
     return delegate.getBooleanValue(SECTION_NAME, "always_sort_threads_by_time", false);
-  }
-
-  public boolean shouldUseTheForce() {
-    return useTheForce;
   }
 
   private Optional<Integer> getPositiveInt(String sectionName, String propertyName) {

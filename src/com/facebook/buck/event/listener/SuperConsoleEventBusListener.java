@@ -144,7 +144,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private final int defaultThreadLineLimit;
   private final int threadLineLimitOnWarning;
   private final int threadLineLimitOnError;
-  private int tempThreadLineLimit;
   private final boolean shouldAlwaysSortThreadsByTime;
 
   private Optional<DistBuildStatus> distBuildStatus;
@@ -155,8 +154,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   // Save if Watchman reported zero file changes in case we receive an ActionGraphCache hit. This
   // way the user can know that their changes, if they made any, were not picked up from Watchman.
   private boolean isZeroFileChanges = false;
-
-  private final MoviePlayer cinemax;
 
   public SuperConsoleEventBusListener(
       SuperConsoleConfig config,
@@ -194,14 +191,11 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     this.defaultThreadLineLimit = config.getThreadLineLimit();
     this.threadLineLimitOnWarning = config.getThreadLineLimitOnWarning();
     this.threadLineLimitOnError = config.getThreadLineLimitOnError();
-    this.tempThreadLineLimit = Integer.MAX_VALUE;
     this.shouldAlwaysSortThreadsByTime = config.shouldAlwaysSortThreadsByTime();
     this.distBuildStatus = Optional.empty();
 
     this.dateFormat = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]", this.locale);
     this.dateFormat.setTimeZone(timeZone);
-
-    this.cinemax = new MoviePlayer(config.shouldUseTheForce());
   }
 
   /**
@@ -277,20 +271,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
    */
   @VisibleForTesting
   ImmutableList<String> createRenderLinesAtTime(long currentTimeMillis) {
-    ImmutableList.Builder<String> lines = ImmutableList.builder();
-
-    ImmutableList<String> movieLines = cinemax.renderFilmFrame();
-    tempThreadLineLimit = movieLines.isEmpty() ? Integer.MAX_VALUE : 1;
-
-    lines.addAll(createRenderLinesAtTimeNo4SrslyThisTime(currentTimeMillis));
-    if (this.buildStarted != null && this.buildFinished == null) {
-      lines.addAll(movieLines);
-    }
-
-    return lines.build();
-  }
-
-  private ImmutableList<String> createRenderLinesAtTimeNo4SrslyThisTime(long currentTimeMillis) {
     ImmutableList.Builder<String> lines = ImmutableList.builder();
 
     // Print latest distributed build debug info lines
@@ -427,9 +407,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       }
       if (anyErrorsPrinted.get() && threadLineLimitOnError < maxThreadLines) {
         maxThreadLines = threadLineLimitOnError;
-      }
-      if (tempThreadLineLimit < maxThreadLines) {
-        maxThreadLines = tempThreadLineLimit;
       }
       if (buildTime == UNFINISHED_EVENT_PAIR) {
         ThreadStateRenderer renderer = new BuildThreadStateRenderer(
