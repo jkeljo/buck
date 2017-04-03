@@ -38,6 +38,7 @@ import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.StreamSupport;
 
 import javax.annotation.Nullable;
 
@@ -335,9 +336,11 @@ public class DefaultJavaLibraryBuilder {
       ImmutableSortedSet<BuildRule> rulesExportedByDependencies =
           BuildRules.getExportedRules(declaredDeps);
 
-      return ImmutableSortedSet.copyOf(Iterables.concat(
+      return StreamSupport.stream(Iterables.concat(
           declaredDeps,
-          rulesExportedByDependencies));
+          rulesExportedByDependencies).spliterator(), false)
+          .filter(rule -> rule instanceof HasJavaAbi)
+          .collect(MoreCollectors.toImmutableSortedSet());
     }
 
     protected ImmutableSortedSet<BuildRule> buildCompileTimeClasspathAbiDeps()
